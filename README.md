@@ -10,7 +10,7 @@ This Snowflake Guide demonstrates how to build a Liquidity Coverage Ratio (LCR) 
 
 ## Step-By-Step Guide
 
-For prerequisites, environment setup, and instructions, refer to the [QuickStart Guide](https://quickstarts.snowflake.com/guide/liquidity-risk-agent/index.html).
+For prerequisites, environment setup, and instructions, refer to the [QuickStart Guide](https://www.snowflake.com/en/developers/guides/liquidity-risk-agent/).
 
 ## Manual Deployment Steps
 
