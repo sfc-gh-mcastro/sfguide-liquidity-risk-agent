@@ -431,14 +431,14 @@ CREATE OR REPLACE TABLE LIQUIDITY_RISK_DB.PRESENTATION.WHAT_IF_LCR (
 -- =====================================================
 -- Upload notebook and streamlit files to stages using SnowSQL or Snowsight:
 --
--- PUT file://notebooks/LIQUIDITY_FORECAST.ipynb @LIQUIDITY_RISK_DB.NOTEBOOKS.LIQUIDITY_NOTEBOOK_STAGE auto_compress = false overwrite = true;
--- PUT file://notebooks/LIQUIDITY_WHAT_IF_FORECAST_SANDBOX.ipynb @LIQUIDITY_RISK_DB.NOTEBOOKS.LIQUIDITY_NOTEBOOK_STAGE auto_compress = false overwrite = true;
--- PUT file://notebooks/environment.yml @LIQUIDITY_RISK_DB.NOTEBOOKS.LIQUIDITY_NOTEBOOK_STAGE auto_compress = false overwrite = true;
--- PUT file://notebooks/prod_calculations.py @LIQUIDITY_RISK_DB.NOTEBOOKS.LIQUIDITY_NOTEBOOK_STAGE auto_compress = false overwrite = true;
--- PUT file://notebooks/utils.py @LIQUIDITY_RISK_DB.NOTEBOOKS.LIQUIDITY_NOTEBOOK_STAGE auto_compress = false overwrite = true;
---
--- PUT file://streamlit/app.py @LIQUIDITY_RISK_DB.STREAMLIT.LIQUIDITY_STREAMLIT_STAGE auto_compress = false overwrite = true;
--- PUT file://streamlit/environment.yml @LIQUIDITY_RISK_DB.STREAMLIT.LIQUIDITY_STREAMLIT_STAGE auto_compress = false overwrite = true;
+ PUT file://notebooks/LIQUIDITY_FORECAST.ipynb @LIQUIDITY_RISK_DB.NOTEBOOKS.LIQUIDITY_NOTEBOOK_STAGE auto_compress = false overwrite = true;
+ PUT file://notebooks/LIQUIDITY_WHAT_IF_FORECAST_SANDBOX.ipynb @LIQUIDITY_RISK_DB.NOTEBOOKS.LIQUIDITY_NOTEBOOK_STAGE auto_compress = false overwrite = true;
+ PUT file://notebooks/environment.yml @LIQUIDITY_RISK_DB.NOTEBOOKS.LIQUIDITY_NOTEBOOK_STAGE auto_compress = false overwrite = true;
+ PUT file://notebooks/prod_calculations.py @LIQUIDITY_RISK_DB.NOTEBOOKS.LIQUIDITY_NOTEBOOK_STAGE auto_compress = false overwrite = true;
+ PUT file://notebooks/utils.py @LIQUIDITY_RISK_DB.NOTEBOOKS.LIQUIDITY_NOTEBOOK_STAGE auto_compress = false overwrite = true;
+
+ PUT file://streamlit/app.py @LIQUIDITY_RISK_DB.STREAMLIT.LIQUIDITY_STREAMLIT_STAGE auto_compress = false overwrite = true;
+ PUT file://streamlit/environment.yml @LIQUIDITY_RISK_DB.STREAMLIT.LIQUIDITY_STREAMLIT_STAGE auto_compress = false overwrite = true;
 
 -- =====================================================
 -- SECTION 11: Create Notebooks
