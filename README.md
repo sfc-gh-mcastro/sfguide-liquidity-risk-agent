@@ -8,6 +8,10 @@ This Snowflake Guide demonstrates how to build a Liquidity Coverage Ratio (LCR) 
 - **What-If Scenarios**: Run pre-defined scenarios to analyze impact on LCR
 - **AI-Powered Agent**: Natural language queries via Cortex Analyst semantic view
 
+![image-20260617172056005](./assets/image-20260617172056005.png)
+
+
+
 ## Step-By-Step Guide
 
 For prerequisites, environment setup, and instructions, refer to the [QuickStart Guide](https://www.snowflake.com/en/developers/guides/liquidity-risk-agent/).
@@ -65,6 +69,8 @@ You can run the dashboard using either **Streamlit in Snowflake** or the **Snowf
 #### Option B: Snowflake App (Next.js on SPCS)
 
 The `liquidity-risk-app/` directory contains a full-stack Next.js app that can be deployed to Snowflake via Snowpark Container Services.
+
+![Snowflake App - LCR Dashboard](assets/snowflake-app-dashboard.png)
 
 **Prerequisites**: [Snowflake CLI](https://docs.snowflake.com/en/developer-guide/snowflake-cli/index) (`snow`) installed and configured.
 
