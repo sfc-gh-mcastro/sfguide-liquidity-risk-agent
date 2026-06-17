@@ -1,0 +1,27 @@
+definition_version: "2"
+
+entities:
+  liquidity_risk_dashboard:
+    type: snowflake-app
+    identifier:
+      name: LIQUIDITY_RISK_DASHBOARD
+      database: USER$MCASTRO
+      schema: PUBLIC
+    artifacts:
+      - src: ./*
+        dest: ./
+        ignore:
+          - node_modules
+          - .env*
+          - __pycache__
+          - "*.pyc"
+          - .next
+          - .git
+          - snowflake.log
+
+    query_warehouse: aicollege
+    build_compute_pool:
+      name: SYSTEM_COMPUTE_POOL_CPU
+    service_compute_pool:
+      name: SYSTEM_COMPUTE_POOL_CPU
+    code_workspace: USER$MCASTRO.PUBLIC.SNOWFLAKE_APPS
