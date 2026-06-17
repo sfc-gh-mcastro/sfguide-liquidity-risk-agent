@@ -1,0 +1,11 @@
+install:
+  commands:
+    - ["npm", "ci", "--include=dev"]
+
+run:
+  command: ["node", ".next/standalone/server.js"]
+
+profile:
+  label: "Liquidity Risk Dashboard"
+  description: "LCR metrics, what-if scenario analysis, and liquidity risk monitoring"
+  icon: icon.svg

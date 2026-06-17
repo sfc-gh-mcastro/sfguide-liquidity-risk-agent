@@ -53,10 +53,42 @@ Run **Sections 11 through 13** of `setup.sql`:
 
 ### Step 4: Run the Demo
 
+You can run the dashboard using either **Streamlit in Snowflake** or the **Snowflake App (Next.js)**.
+
+#### Option A: Streamlit in Snowflake
+
 1. **Open the Streamlit App** (`LIQUIDITY_STREAMLIT`) in Snowsight
-2. **Generate LCR Data**: Navigate to the "Generate LCR Data" page and run the LIQUIDITY_FORECAST notebook
+2. **Generate LCR Data**: Click "Re-Calculate LCR" to run the LIQUIDITY_FORECAST notebook
 3. **Run What-If Scenarios**: Use the "What-if Scenarios" page to analyze different scenarios
-4. **Ask the Agent**: Use the "Ask the Agent" page in Streamlit, or go to **Snowflake Intelligence** to chat with the agent directly
+4. **Ask the Agent**: Use the "Ask the Agent" page, or go to **Snowflake Intelligence** to chat with the agent directly
+
+#### Option B: Snowflake App (Next.js on SPCS)
+
+The `liquidity-risk-app/` directory contains a full-stack Next.js app that can be deployed to Snowflake via Snowpark Container Services.
+
+**Prerequisites**: [Snowflake CLI](https://docs.snowflake.com/en/developer-guide/snowflake-cli/index) (`snow`) installed and configured.
+
+**Local development**:
+```bash
+cd liquidity-risk-app
+npm install
+npm run dev
+# Open http://localhost:3000
+```
+
+> Note: For local dev, ensure your `~/.snowflake/connections.toml` has a valid connection. Set `SNOWFLAKE_CONNECTION_NAME=<your_connection>` in `.env.local` if needed.
+
+**Deploy to Snowflake**:
+```bash
+cd liquidity-risk-app
+snow app deploy --connection <your_connection>
+```
+
+The app will be built and deployed on SPCS. Once complete, you'll receive a `.snowflakecomputing.app` URL.
+
+**Pages**:
+- **/** — LCR Dashboard (metrics, trend chart, re-calculate button)
+- **/what-if** — What-if Scenario Analysis (select and execute pre-defined scenarios)
 
 ## Example Questions for the Agent
 
@@ -96,12 +128,20 @@ liquidity-risk-agent/
 ├── notebooks/
 │   ├── LIQUIDITY_FORECAST.ipynb
 │   ├── LIQUIDITY_WHAT_IF_FORECAST_SANDBOX.ipynb
+│   ├── EVALUATE_SEMANTIC_VIEW.ipynb
 │   ├── prod_calculations.py
 │   ├── utils.py
 │   └── environment.yml
 ├── streamlit/
 │   ├── app.py
 │   └── environment.yml
+├── liquidity-risk-app/          # Snowflake App (Next.js)
+│   ├── app/                     # Pages and API routes
+│   ├── components/              # React components
+│   ├── lib/                     # Snowflake SDK helper, constants
+│   ├── snowflake.yml            # Deployment config
+│   ├── app.yml                  # App metadata
+│   └── package.json
 └── scripts/
     └── setup.sql
 ```
