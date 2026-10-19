@@ -5,5 +5,4 @@ output/
 *.tsbuildinfo
 .env.local
 *.log
-package-lock.json
 .DS_Store
