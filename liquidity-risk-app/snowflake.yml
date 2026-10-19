@@ -5,7 +5,7 @@ entities:
     type: snowflake-app
     identifier:
       name: LIQUIDITY_RISK_DASHBOARD
-      database: USER$MCASTRO
+      database: LIQUIDITY_RISK_DB
       schema: PUBLIC
     artifacts:
       - src: ./*
@@ -19,9 +19,8 @@ entities:
           - .git
           - snowflake.log
 
-    query_warehouse: aicollege
+    query_warehouse: LIQUIDITY_RISK_WH
     build_compute_pool:
       name: SYSTEM_COMPUTE_POOL_CPU
-    service_compute_pool:
-      name: SYSTEM_COMPUTE_POOL_CPU
-    code_workspace: USER$MCASTRO.PUBLIC.SNOWFLAKE_APPS
+    code_stage:
+      name: LIQUIDITY_RISK_DASHBOARD_CODE

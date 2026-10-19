@@ -1,11 +1,16 @@
 install:
   commands:
-    - ["npm", "ci", "--include=dev"]
+    - ["npm", "ci", "--include=dev", "--legacy-peer-deps"]
+
+build:
+  commands:
+    - ["npm", "run", "build"]
+    - ["sh", "-c", "cp -r .next/static .next/standalone/.next/static && cp -r public .next/standalone/public"]
 
 run:
   command: ["node", ".next/standalone/server.js"]
 
 profile:
   label: "Liquidity Risk Dashboard"
-  description: "LCR metrics, what-if scenario analysis, and liquidity risk monitoring"
+  description: "LCR metrics, what-if scenario analysis, and agent-assisted liquidity risk monitoring"
   icon: icon.svg

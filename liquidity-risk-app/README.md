@@ -1,48 +1,90 @@
-# Next.js Template for Snowflake Apps
+# Liquidity Risk Dashboard (LCR Agent Demo)
 
-Minimal Next.js app deployed as a Snowflake App. Queries Snowflake using the [Node.js SDK](https://docs.snowflake.com/en/developer-guide/node-js/nodejs-driver) and demonstrates server-side rendering, API routes, and caller's-rights token handling.
+Next.js app for the Liquidity Coverage Ratio (LCR) demo. It shows the LCR dashboard, the What-If stress scenarios, and a docked **Ask the Agent** pane that calls the Cortex Agent `LIQUIDITY_RISK_DB.PUBLIC.LIQUIDITY_FORECAST_AGENT`.
 
-## Local Development
+- **Snowflake connection:** any named connection that can use `LIQUIDITY_RISK_ROLE` (examples use `<your_connection>`)
+- **Role:** `LIQUIDITY_RISK_ROLE`
+- **Database:** `LIQUIDITY_RISK_DB`
+- **Warehouse:** `LIQUIDITY_RISK_WH`
 
-```bash
-npm install
-npm run dev
-```
+## Prerequisites
 
-The app reads Snowflake credentials automatically from your default [Snowflake CLI](https://docs.snowflake.com/en/developer-guide/snowflake-cli/connecting/specify-credentials) connection in `~/.snowflake/config.toml`. No extra configuration needed if you already have `snow` CLI set up.
+- Node.js and npm
+- Snowflake CLI configured with a named connection in `~/.snowflake/config.toml` (or `connections.toml`), whose user can use `LIQUIDITY_RISK_ROLE`
+- The LCR environment deployed on `<your_connection>` on that connection (`../scripts/setup.sql`)
 
-To use a specific named connection, set `SNOWFLAKE_CONNECTION_NAME`:
-
-```bash
-SNOWFLAKE_CONNECTION_NAME=myconn npm run dev
-```
-
-Alternatively, skip the config file entirely and provide env vars directly:
+## Run locally
 
 ```bash
-SNOWFLAKE_ACCOUNT=myaccount \
-SNOWFLAKE_ACCOUNT_URL=https://myaccount.snowflakecomputing.com \
-SNOWFLAKE_USER=myuser \
-SNOWFLAKE_PASSWORD=mypassword \
-SNOWFLAKE_WAREHOUSE=my_wh \
-npm run dev
+cd liquidity-risk-app
+npm ci --legacy-peer-deps
+SNOWFLAKE_CONNECTION_NAME=<your_connection> npm run dev -- -p 3123
 ```
 
-## Deploy
+Open http://localhost:3123.
 
-Edit `snowflake.yml` (set the database and app name), then:
+### Why the flags matter
+
+- **`SNOWFLAKE_CONNECTION_NAME=<your_connection>`:** without it the app uses `default_connection_name` from `config.toml`, which may point at a different account. It overrides the file default (`lib/snowflake.ts`).
+- **`--legacy-peer-deps`:** a plain `npm install`/`npm ci` can crash on Node 23 / npm 10.9 with `Cannot read properties of null (reading 'edgesOut')`.
+- **`-p 3123`:** the port the demo notes use. Any free port works.
+
+## Pages
+
+| Path | What it shows |
+|---|---|
+| `/` | LCR dashboard: Day-1 metrics, 150-day trend, re-calculate button |
+| `/what-if` | Pre-defined stress scenarios and their LCR results |
+
+The agent pane is docked on the right on both pages, so the conversation carries over between them. Use the header button to collapse it, and the floating **Ask the Agent** button to bring it back.
+
+## Demo questions (one-click starters in the pane)
+
+1. What is the current LCR and how does it trend over the next 30 days? (~15s)
+2. Break down our HQLA by asset category. Which categories hold the most value? (~60s, talk over the Generated SQL from Q1 while it runs)
+3. Compare the baseline with the what-if stress scenario. (~20s)
+4. On which day does the LCR drop below 15x? (the agent pushes back: the LCR rises through 15x, it never drops below it)
+
+## Check the agent without the UI
 
 ```bash
-snow app deploy
+curl -s -X POST http://localhost:3123/api/agent \
+  -H "Content-Type: application/json" \
+  -d '{"messages":[{"role":"user","text":"What is the current LCR?"}]}'
 ```
 
-## Key Concepts
+Returns `answer`, `sql` (the generated SQL) and `suggestions`.
 
-- **`querySnowflake(sql)`** returns `Record<string, any>[]`. Import it in any server component or route handler.
-- **`export const dynamic = "force-dynamic"`** is required on pages/routes that query Snowflake — prevents build-time rendering when the DB is unreachable.
-- **Client components** cannot call `querySnowflake()` directly. Create an API route and `fetch()` it instead (see `components/time-card.tsx` + `api/time/route.ts`).
-- **Caller's rights** — The `/api/query` route reads the `sf-context-current-user-token` header provided by SPCS, combines it with the service token via `buildCallerRightsToken()`, and runs a query as the calling user. This lets you compare service context vs caller context side-by-side.
-- **Branding** — Edit `lib/constants.ts` to change the app title and logo path (shared by the header and page metadata). Edit the CSS variables in `app/globals.css` to change the primary brand color. Button colors and focus rings update automatically.
-- **Dark mode** — Built in via a custom theme provider in `components/theme-provider.tsx`. Respects the OS `prefers-color-scheme` setting by default. A Sun/Moon toggle in the header lets users override it. Light/dark CSS variable overrides live in `app/globals.css`.
-- **API fetching** — `@tanstack/react-query` is pre-installed. Client components that fetch API routes should use `useQuery` (see `components/time-card.tsx`, `components/query-card.tsx`). The `QueryProvider` in `components/query-provider.tsx` wraps the root layout.
-- **UI components** — shadcn/ui is pre-configured (`components.json`). `Button`, `Card`, `Alert`, `Badge`, `Separator`, and `Table` are already installed in `components/ui/`. Run `npx shadcn@latest add <component>` only for components not yet present.
+## Troubleshooting
+
+- **Wrong data or "object does not exist":** the app is probably on the wrong connection. Restart with `SNOWFLAKE_CONNECTION_NAME=<your_connection>`.
+- **What-If page is empty:** run the what-if notebook once (as `LIQUIDITY_RISK_ROLE`):
+  ```sql
+  EXECUTE NOTEBOOK LIQUIDITY_RISK_DB.PUBLIC.LIQUIDITY_WHAT_IF_FORECAST_SANDBOX(
+    'db=LIQUIDITY_RISK_DB',
+    'positions_table=LIQUIDITY_RISK_DB.RAW_SANDBOX.POSITIONS',
+    'inflows_table=LIQUIDITY_RISK_DB.RAW_SANDBOX.CASH_INFLOWS',
+    'outflows_table=LIQUIDITY_RISK_DB.RAW_SANDBOX.CASH_OUTFLOWS',
+    'suffix=DEMO01', 'what_if_id=1');
+  ```
+- **Agent pane errors:** use Snowflake Intelligence in Snowsight as the fallback; the agent is registered there.
+
+## Deploy to Snowflake (SAR)
+
+```bash
+snow app deploy --connection <your_connection> --role LIQUIDITY_RISK_ROLE
+```
+
+Deploys `LIQUIDITY_RISK_DB.PUBLIC.LIQUIDITY_RISK_DASHBOARD` as `LIQUIDITY_RISK_ROLE` (settings in `snowflake.yml`).
+
+## Cleanup
+
+```sql
+DROP APPLICATION SERVICE IF EXISTS LIQUIDITY_RISK_DB.PUBLIC.LIQUIDITY_RISK_DASHBOARD;
+DROP DATABASE IF EXISTS LIQUIDITY_RISK_DB;
+DROP WAREHOUSE IF EXISTS LIQUIDITY_RISK_WH;
+DROP WAREHOUSE IF EXISTS LIQUIDITY_RISK_AGENT_WH;
+DROP ROLE IF EXISTS LIQUIDITY_RISK_ROLE;
+```
+
+After teardown, check that the `LIQUIDITY_RISK_DASHBOARD_REPO` artifact repository is gone too.

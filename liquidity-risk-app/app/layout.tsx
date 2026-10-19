@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import type React from "react"
 import { AppHeader } from "@/components/app-header"
+import { AgentPanel } from "@/components/agent-panel"
 import { ThemeProvider } from "@/components/theme-provider"
 import { APP_TITLE, LOGO_SRC } from "@/lib/constants"
 import "./globals.css"
@@ -21,7 +22,10 @@ export default function RootLayout({
       <body className="antialiased">
         <ThemeProvider>
           <AppHeader />
-          {children}
+          <div className="flex">
+            <div className="flex-1 min-w-0">{children}</div>
+            <AgentPanel />
+          </div>
         </ThemeProvider>
       </body>
     </html>

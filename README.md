@@ -85,16 +85,34 @@ npm run dev
 > Note: For local dev, ensure your `~/.snowflake/connections.toml` has a valid connection. Set `SNOWFLAKE_CONNECTION_NAME=<your_connection>` in `.env.local` if needed.
 
 **Deploy to Snowflake**:
+
+The app deploys as `LIQUIDITY_RISK_DB.PUBLIC.LIQUIDITY_RISK_DASHBOARD` (see `snowflake.yml`). Grant the role the compute and service privileges first:
+```sql
+USE ROLE ACCOUNTADMIN;
+GRANT USAGE ON COMPUTE POOL SYSTEM_COMPUTE_POOL_CPU TO ROLE LIQUIDITY_RISK_ROLE;
+GRANT CREATE SERVICE, CREATE APPLICATION SERVICE ON SCHEMA LIQUIDITY_RISK_DB.PUBLIC TO ROLE LIQUIDITY_RISK_ROLE;
+```
+Then deploy:
 ```bash
 cd liquidity-risk-app
-snow app deploy --connection <your_connection>
+snow app deploy --connection <your_connection> --role LIQUIDITY_RISK_ROLE
 ```
 
-The app will be built and deployed on SPCS. Once complete, you'll receive a `.snowflakecomputing.app` URL.
+The app will be built and deployed on SPCS. Once complete, you'll receive a `.snowflakecomputing.app` URL. See [`liquidity-risk-app/README.md`](liquidity-risk-app/README.md) for local run details and troubleshooting.
 
 **Pages**:
 - **/** — LCR Dashboard (metrics, trend chart, re-calculate button)
-- **/what-if** — What-if Scenario Analysis (select and execute pre-defined scenarios)
+- **/what-if** — What-if Scenario Analysis (select and execute pre-defined scenarios, with an animated view of the calculation while it runs)
+
+Both pages include a docked **Ask the Liquidity Agent** pane that calls `LIQUIDITY_RISK_DB.PUBLIC.LIQUIDITY_FORECAST_AGENT`, renders tables and formatting in the answers, and shows the generated SQL.
+
+### Step 5 (Optional): Share the Agent
+
+`scripts/share_agent.sql` shares the agent, its semantic view and the underlying tables through a secure share (`LCR_AGENT_SHARE`). It also shows how to create a reader account to demonstrate the consumer side without a second Snowflake account. To publish on Snowflake Marketplace instead, attach the share to a listing in Provider Studio and add the **Cortex AI Ready** category.
+
+### Presentation
+
+`docs/LCR_Marketplace_Demo_Deck.html` is a 12-slide customer presentation covering the LCR problem, the solution architecture, a live demo script, and agent sharing. Open it in a browser.
 
 ## Example Questions for the Agent
 
@@ -149,7 +167,10 @@ liquidity-risk-agent/
 │   ├── app.yml                  # App metadata
 │   └── package.json
 └── scripts/
-    └── setup.sql
+    ├── setup.sql
+    └── share_agent.sql          # Share the agent + optional reader account
+docs/
+└── LCR_Marketplace_Demo_Deck.html  # Customer presentation
 ```
 
 ## Variables
