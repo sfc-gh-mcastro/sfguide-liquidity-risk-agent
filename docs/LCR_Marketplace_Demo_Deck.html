@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="snowflake-source" content="cortex-agent-authored" />
+  <title>Liquidity Risk Agent — Snowflake Marketplace Demo</title>
+  <script type="application/json" id="snowflake-report-metadata">
+  {
+    "generated": "2026-10-19",
+    "intent": "Customer-facing presentation: LCR agent + marketplace sharing demo",
+    "sections": [
+      { "id": "slide-deck", "title": "LCR Marketplace Demo Deck",
+        "producerNotes": "Static presentation deck — no live data queries. LCR metrics embedded from LIQUIDITY_RISK_DB.PRESENTATION.LCR on aws_eunorth1." }
+    ]
+  }
+  </script>
+  <style>
+    :root { color-scheme: light dark; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, 'SF Pro Display', system-ui, sans-serif;
+      background: light-dark(#f8fafc, #0f172a);
+      color: light-dark(#1e293b, #e2e8f0);
+    }
+
+    .slide {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: clamp(24px, 6vw, 80px);
+      max-width: 1100px;
+      margin: 0 auto;
+      page-break-after: always;
+    }
+
+    .slide-number {
+      position: fixed;
+      bottom: 16px;
+      right: 24px;
+      font-size: 13px;
+      color: light-dark(#94a3b8, #475569);
+      display: none;
+    }
+
+    h1 {
+      font-size: clamp(28px, 5vw, 52px);
+      font-weight: 700;
+      color: light-dark(#0f172a, #f1f5f9);
+      line-height: 1.15;
+      margin-bottom: 16px;
+    }
+
+    h2 {
+      font-size: clamp(22px, 3.5vw, 36px);
+      font-weight: 700;
+      color: light-dark(#0f172a, #f1f5f9);
+      margin-bottom: 20px;
+      line-height: 1.2;
+    }
+
+    h3 {
+      font-size: clamp(16px, 2vw, 22px);
+      font-weight: 600;
+      color: light-dark(#29B5E8, #29B5E8);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .subtitle {
+      font-size: clamp(16px, 2.5vw, 24px);
+      color: light-dark(#64748b, #94a3b8);
+      line-height: 1.5;
+      max-width: 700px;
+    }
+
+    .brand-accent {
+      color: #29B5E8;
+    }
+
+    .pill {
+      display: inline-block;
+      background: light-dark(#e0f2fe, #164e63);
+      color: light-dark(#0369a1, #67e8f9);
+      padding: 4px 14px;
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin-top: 24px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      margin-top: 24px;
+    }
+
+    .card {
+      background: light-dark(#ffffff, #1e293b);
+      border: 1px solid light-dark(#e2e8f0, #334155);
+      border-radius: 12px;
+      padding: 24px;
+    }
+
+    .card h4 {
+      font-size: 16px;
+      font-weight: 600;
+      color: light-dark(#0f172a, #f1f5f9);
+      margin-bottom: 8px;
+    }
+
+    .card p, .card li {
+      font-size: 15px;
+      color: light-dark(#475569, #94a3b8);
+      line-height: 1.6;
+    }
+
+    .card ul {
+      padding-left: 18px;
+    }
+
+    .card ul li {
+      margin-bottom: 4px;
+    }
+
+    .metric-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin: 24px 0;
+    }
+
+    .metric {
+      background: light-dark(#ffffff, #1e293b);
+      border: 1px solid light-dark(#e2e8f0, #334155);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .metric .value {
+      font-size: clamp(28px, 4vw, 40px);
+      font-weight: 700;
+      color: #29B5E8;
+    }
+
+    .metric .label {
+      font-size: 13px;
+      color: light-dark(#64748b, #94a3b8);
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .step-list {
+      counter-reset: steps;
+      list-style: none;
+      padding: 0;
+    }
+
+    .step-list li {
+      counter-increment: steps;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 20px;
+      font-size: 16px;
+      line-height: 1.6;
+      color: light-dark(#334155, #cbd5e1);
+    }
+
+    .step-list li::before {
+      content: counter(steps);
+      flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+      background: #29B5E8;
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .code-block {
+      background: light-dark(#1e293b, #0f172a);
+      border: 1px solid light-dark(#334155, #1e293b);
+      border-radius: 8px;
+      padding: 16px 20px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 14px;
+      color: #e2e8f0;
+      overflow-x: auto;
+      margin: 16px 0;
+      line-height: 1.7;
+    }
+
+    .code-block .kw { color: #c084fc; }
+    .code-block .fn { color: #67e8f9; }
+    .code-block .str { color: #86efac; }
+    .code-block .comment { color: #64748b; }
+
+    .arch-flow {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin: 32px 0;
+    }
+
+    .arch-box {
+      background: light-dark(#ffffff, #1e293b);
+      border: 2px solid #29B5E8;
+      border-radius: 10px;
+      padding: 14px 20px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 14px;
+      color: light-dark(#0f172a, #f1f5f9);
+      min-width: 140px;
+    }
+
+    .arch-arrow {
+      font-size: 24px;
+      color: #29B5E8;
+    }
+
+    .divider {
+      width: 60px;
+      height: 4px;
+      background: #29B5E8;
+      border-radius: 2px;
+      margin: 16px 0;
+    }
+
+    .highlight-box {
+      background: light-dark(#eff6ff, #1e3a5f);
+      border-left: 4px solid #29B5E8;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 20px 0;
+      font-size: 15px;
+      color: light-dark(#1e40af, #93c5fd);
+      line-height: 1.6;
+    }
+
+    .footer-note {
+      font-size: 13px;
+      color: light-dark(#94a3b8, #475569);
+      margin-top: 32px;
+    }
+
+    img, svg { max-width: 100%; height: auto; }
+
+    @media print {
+      .slide { min-height: auto; padding: 40px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SLIDE 1: Title -->
+  <section class="slide">
+    <span class="pill">Snowflake Cortex AI</span>
+    <h1>Liquidity Risk Agent<br><span class="brand-accent">& Marketplace Sharing</span></h1>
+    <div class="divider"></div>
+    <p class="subtitle">
+      How Snowflake enables AI-powered Liquidity Coverage Ratio analysis —
+      and how to share it across your organization through Snowflake Marketplace.
+    </p>
+    <p class="footer-note" style="margin-top: 48px;">Financial Services Demo &mdash; October 2026</p>
+  </section>
+
+  <!-- SLIDE 2: Agenda -->
+  <section class="slide">
+    <h3>Today's Agenda</h3>
+    <h2>30 Minutes</h2>
+    <div class="divider"></div>
+    <div class="grid-2">
+      <div class="card">
+        <h4>1. The Challenge</h4>
+        <p>Why traditional LCR monitoring falls short in today's regulatory environment.</p>
+      </div>
+      <div class="card">
+        <h4>2. The Solution</h4>
+        <p>Snowflake Cortex Agent for real-time LCR analysis using natural language.</p>
+      </div>
+      <div class="card">
+        <h4>3. Live Demo</h4>
+        <p>See the agent in action: dashboards, what-if scenarios, and conversational analytics.</p>
+      </div>
+      <div class="card">
+        <h4>4. Marketplace Sharing</h4>
+        <p>Share agents, semantic views, and data products across accounts — securely and instantly.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3: The Challenge -->
+  <section class="slide">
+    <h3>The Challenge</h3>
+    <h2>LCR Monitoring is<br>Harder Than It Should Be</h2>
+    <div class="divider"></div>
+    <div class="grid-2">
+      <div class="card">
+        <h4>Fragmented Data</h4>
+        <p>Positions, cash flows, HQLA classifications, and counterparty data live in silos. Reconciliation is manual and error-prone.</p>
+      </div>
+      <div class="card">
+        <h4>Slow Reporting</h4>
+        <p>Treasury teams wait hours or days for LCR calculations. Stress scenarios require IT involvement to build and run.</p>
+      </div>
+      <div class="card">
+        <h4>Limited What-If</h4>
+        <p>Regulators expect rapid scenario analysis. Most teams can only run pre-built reports — no ad-hoc exploration.</p>
+      </div>
+      <div class="card">
+        <h4>Knowledge Bottleneck</h4>
+        <p>Only a few analysts understand the data model well enough to query it. Everyone else files tickets and waits.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4: The Solution -->
+  <section class="slide">
+    <h3>The Solution</h3>
+    <h2>AI-Powered Liquidity Intelligence</h2>
+    <div class="divider"></div>
+    <p class="subtitle" style="margin-bottom: 24px;">
+      A Snowflake Cortex Agent that understands your liquidity data and answers questions in natural language — no SQL required.
+    </p>
+    <div class="grid-3">
+      <div class="card">
+        <h4>Cortex Agent</h4>
+        <p>Orchestrates natural language queries using Cortex Analyst over your semantic view. Ask anything about LCR, HQLA, or cash flows.</p>
+      </div>
+      <div class="card">
+        <h4>Semantic View</h4>
+        <p>Business-friendly data model covering 9 tables: positions, inflows, outflows, counterparties, asset classifications, and LCR forecasts.</p>
+      </div>
+      <div class="card">
+        <h4>Notebooks</h4>
+        <p>Automated 150-day LCR forecasts and pre-defined what-if stress scenarios — execute with one click.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 5: Architecture -->
+  <section class="slide">
+    <h3>Architecture</h3>
+    <h2>How It Works</h2>
+    <div class="divider"></div>
+    <div class="arch-flow">
+      <div class="arch-box">User<br><small>Natural Language</small></div>
+      <span class="arch-arrow">&rarr;</span>
+      <div class="arch-box">Cortex Agent<br><small>Orchestration</small></div>
+      <span class="arch-arrow">&rarr;</span>
+      <div class="arch-box">Cortex Analyst<br><small>Text-to-SQL</small></div>
+      <span class="arch-arrow">&rarr;</span>
+      <div class="arch-box">Semantic View<br><small>LIQUIDITY_SV</small></div>
+      <span class="arch-arrow">&rarr;</span>
+      <div class="arch-box">Snowflake Data<br><small>9 Tables</small></div>
+    </div>
+    <div class="highlight-box">
+      The agent translates questions like <em>"What's our LCR headroom vs the regulatory floor?"</em>
+      into precise SQL, executes it, and returns formatted results with charts — all governed by the semantic view's business logic.
+    </div>
+    <div class="metric-row" style="margin-top: 32px;">
+      <div class="metric">
+        <div class="value">580K</div>
+        <div class="label">Positions</div>
+      </div>
+      <div class="metric">
+        <div class="value">200K</div>
+        <div class="label">Cash Flows</div>
+      </div>
+      <div class="metric">
+        <div class="value">2,000</div>
+        <div class="label">Counterparties</div>
+      </div>
+      <div class="metric">
+        <div class="value">150 Days</div>
+        <div class="label">Forecast Horizon</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 6: Live Demo -->
+  <section class="slide">
+    <h3>Live Demo</h3>
+    <h2>See the Agent in Action</h2>
+    <div class="divider"></div>
+    <div class="metric-row">
+      <div class="metric">
+        <div class="value">11.1x</div>
+        <div class="label">Current LCR (Day 1)</div>
+      </div>
+      <div class="metric">
+        <div class="value">$793B</div>
+        <div class="label">Total HQLA</div>
+      </div>
+      <div class="metric">
+        <div class="value">$71B</div>
+        <div class="label">Net Outflows (30d)</div>
+      </div>
+    </div>
+    <h4 style="margin-top: 24px; color: light-dark(#0f172a, #f1f5f9);">Demo Script</h4>
+    <ol class="step-list" style="margin-top: 16px;">
+      <li><strong>LCR Dashboard</strong> — Show real-time metrics, 150-day trend chart, compliance threshold line</li>
+      <li><strong>Q1 — Opener:</strong> <em>"What is the current LCR and how does it trend over the next 30 days?"</em><br><small style="color: light-dark(#64748b,#94a3b8);">Expect: LCR at 1,112% rising to ~1,232%, with auto-generated chart</small></li>
+      <li><strong>Q2 — Deep Dive:</strong> <em>"Break down our HQLA by asset category. Which categories hold the most value?"</em><br><small style="color: light-dark(#64748b,#94a3b8);">Expect: Central Bank Reserves ($1.23B) and Cash ($1.03B) dominate as Level 1</small></li>
+      <li><strong>Q3 — Stress Test:</strong> <em>"Compare the baseline forecast with the what-if scenario."</em><br><small style="color: light-dark(#64748b,#94a3b8);">Expect: Baseline rises to 21.9x, stress drops to 5.4x by Day 150 — dramatic contrast</small></li>
+      <li><strong>Q4 — Curveball:</strong> <em>"On which day does the LCR first drop below 15x?"</em><br><small style="color: light-dark(#64748b,#94a3b8);">The agent pushes back — LCR never drops below 15x, it <em>rises through</em> 15x at Day 74. Shows reasoning, not just retrieval.</small></li>
+    </ol>
+    <div class="highlight-box" style="margin-top: 16px;">
+      <strong>App:</strong> <a href="https://btaibbj-sfseeurope-aws-eunorth1.snowflakecomputing.app">btaibbj-sfseeurope-aws-eunorth1.snowflakecomputing.app</a><br>
+      <strong>Agent FQN:</strong> <code>LIQUIDITY_RISK_DB.PUBLIC.LIQUIDITY_FORECAST_AGENT</code><br>
+      <strong>Fallback:</strong> If the embedded agent panel has issues, switch to Snowflake Intelligence in Snowsight — the agent is already registered there.
+    </div>
+  </section>
+
+  <!-- SLIDE 7: Marketplace Sharing -->
+  <section class="slide">
+    <h3>Sharing &amp; Distribution</h3>
+    <h2>Share Agents Through<br><span class="brand-accent">Snowflake Marketplace</span></h2>
+    <div class="divider"></div>
+    <p class="subtitle" style="margin-bottom: 24px;">
+      Share your Cortex Agent — along with its semantic view and underlying data — with other Snowflake accounts.
+      Consumers get an AI-ready data product out of the box.
+    </p>
+    <div class="grid-2">
+      <div class="card">
+        <h4>What Gets Shared</h4>
+        <ul>
+          <li>Cortex Agent (orchestration + instructions)</li>
+          <li>Semantic View (business logic + relationships)</li>
+          <li>Underlying tables (live data access)</li>
+          <li>Verified queries (pre-validated SQL)</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>Consumer Experience</h4>
+        <ul>
+          <li>Install listing &rarr; agent appears in CoWork</li>
+          <li>Ask questions in natural language immediately</li>
+          <li>Choose their own warehouse for compute</li>
+          <li>No data movement, no ETL, no setup</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 8: How to Share (SQL) -->
+  <section class="slide">
+    <h3>How It Works</h3>
+    <h2>Three Steps to Share</h2>
+    <div class="divider"></div>
+    <ol class="step-list">
+      <li>
+        <div>
+          <strong>Create a Secure Share</strong>
+          <div class="code-block">
+            <span class="kw">CREATE</span> <span class="fn">SHARE</span> lcr_agent_share;<br>
+            <span class="kw">GRANT USAGE ON DATABASE</span> LIQUIDITY_RISK_DB <span class="kw">TO SHARE</span> lcr_agent_share;<br>
+            <span class="kw">GRANT USAGE ON SCHEMA</span> LIQUIDITY_RISK_DB.PUBLIC <span class="kw">TO SHARE</span> lcr_agent_share;
+          </div>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Grant Agent + Semantic View to the Share</strong>
+          <div class="code-block">
+            <span class="kw">GRANT USAGE ON AGENT</span> LIQUIDITY_RISK_DB.PUBLIC.LIQUIDITY_FORECAST_AGENT <span class="kw">TO SHARE</span> lcr_agent_share;<br>
+            <span class="kw">GRANT SELECT, REFERENCES ON SEMANTIC VIEW</span> LIQUIDITY_RISK_DB.PUBLIC.LIQUIDITY_SV <span class="kw">TO SHARE</span> lcr_agent_share;
+          </div>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Publish as a Listing (or Direct Share)</strong>
+          <p style="margin-top: 8px; color: light-dark(#475569, #94a3b8);">
+            Use Provider Studio in Snowsight to create a Marketplace listing, or share directly with specific accounts.
+            Auto-fulfillment replicates to other regions automatically.
+          </p>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <!-- SLIDE 9: Auto-gen Agents -->
+  <section class="slide">
+    <h3>Even Faster Path</h3>
+    <h2>Automatic Data Agents</h2>
+    <div class="divider"></div>
+    <p class="subtitle" style="margin-bottom: 24px;">
+      Don't have a semantic view or agent yet? Snowflake can auto-generate both from your listing metadata and table schemas — in minutes.
+    </p>
+    <div class="grid-2">
+      <div class="card">
+        <h4>One-Click Generation</h4>
+        <ul>
+          <li>Analyzes your table schemas automatically</li>
+          <li>Creates a semantic view with relationships</li>
+          <li>Generates a Cortex Agent with domain-aware instructions</li>
+          <li>Available in Provider Studio for listings and direct shares</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>When to Use</h4>
+        <ul>
+          <li>Quick AI-readiness for new listings</li>
+          <li>Well-defined table structures</li>
+          <li>Good listing descriptions improve quality</li>
+          <li>Test before publishing — refine as needed</li>
+        </ul>
+      </div>
+    </div>
+    <div class="highlight-box">
+      <strong>Tip:</strong> Add the <em>Cortex AI Ready</em> category to your listing — it helps consumers discover AI-enabled data products on the Marketplace.
+    </div>
+  </section>
+
+  <!-- SLIDE 10: Benefits -->
+  <section class="slide">
+    <h3>Why This Matters</h3>
+    <h2>Benefits</h2>
+    <div class="divider"></div>
+    <div class="grid-3">
+      <div class="card">
+        <h4>For Treasury Teams</h4>
+        <ul>
+          <li>Ask questions in plain English</li>
+          <li>Real-time LCR monitoring</li>
+          <li>Self-service what-if analysis</li>
+          <li>No SQL skills required</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>For Risk &amp; Compliance</h4>
+        <ul>
+          <li>Basel III aligned metrics</li>
+          <li>Auditable semantic layer</li>
+          <li>Governed access controls</li>
+          <li>Stress testing on demand</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>For the Enterprise</h4>
+        <ul>
+          <li>Share across subsidiaries via Marketplace</li>
+          <li>Zero data movement</li>
+          <li>Consumer pays compute</li>
+          <li>Auto-replication to other regions</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 11: Next Steps -->
+  <section class="slide">
+    <h3>Next Steps</h3>
+    <h2>Let's Get Started</h2>
+    <div class="divider"></div>
+    <ol class="step-list">
+      <li><strong>Pilot</strong> — Deploy the LCR agent on your Snowflake account with your own liquidity data</li>
+      <li><strong>Customize</strong> — Tune the semantic view to match your data model, add verified queries for your key metrics</li>
+      <li><strong>Scale</strong> — Share internally via organizational listings, then expand to external partners through Marketplace</li>
+      <li><strong>Extend</strong> — Add Cortex Search for unstructured content (regulatory docs, internal policies) alongside structured analysis</li>
+    </ol>
+    <div class="highlight-box" style="margin-top: 32px;">
+      <strong>Resources:</strong> The complete guide, setup scripts, and application code are available as a Snowflake QuickStart. We can have a pilot running in your environment within days.
+    </div>
+  </section>
+
+  <!-- SLIDE 12: Thank You -->
+  <section class="slide" style="text-align: center;">
+    <span class="pill">Thank You</span>
+    <h1 style="margin-top: 16px;">Questions?</h1>
+    <div class="divider" style="margin: 16px auto;"></div>
+    <p class="subtitle" style="margin: 0 auto;">
+      Ready to explore AI-powered liquidity intelligence on Snowflake.
+    </p>
+  </section>
+
+</body>
+</html>

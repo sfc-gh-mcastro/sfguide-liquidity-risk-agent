@@ -7,6 +7,7 @@ import {
   ResponsiveContainer, ReferenceLine,
 } from "recharts"
 import type { WhatIfDefinition } from "./page"
+import { WhatIfFlow } from "@/components/what-if-flow"
 
 interface ResultPoint {
   dayNumber: number
@@ -26,6 +27,8 @@ export function WhatIfScenarios({ initialDefinitions, initialError }: Props) {
   const [selectedId, setSelectedId] = useState<string>("")
   const [executing, setExecuting] = useState(false)
   const [results, setResults] = useState<ResultPoint[]>([])
+  const [showFlow, setShowFlow] = useState(false)
+  const [flowDone, setFlowDone] = useState(false)
 
   const whatIfIds = useMemo(() => {
     const ids = [...new Set(definitions.map((d) => d.whatIfId))]
@@ -42,6 +45,8 @@ export function WhatIfScenarios({ initialDefinitions, initialError }: Props) {
     setExecuting(true)
     setError(undefined)
     setResults([])
+    setFlowDone(false)
+    setShowFlow(true)
     try {
       const execRes = await fetch("/api/what-if/execute", {
         method: "POST",
@@ -59,12 +64,16 @@ export function WhatIfScenarios({ initialDefinitions, initialError }: Props) {
       if (resultsJson.error) {
         setError(resultsJson.error)
       } else {
+        // Let the flow snap to done and linger briefly before results replace it.
+        setFlowDone(true)
+        await new Promise((r) => setTimeout(r, 1200))
         setResults(resultsJson.data)
       }
     } catch {
       setError("Network error executing scenario")
     } finally {
       setExecuting(false)
+      setShowFlow(false)
     }
   }, [selectedId])
 
@@ -142,6 +151,8 @@ export function WhatIfScenarios({ initialDefinitions, initialError }: Props) {
           </div>
         </details>
       )}
+
+      {showFlow && <WhatIfFlow defs={filteredDefs} done={flowDone} />}
 
       {results.length > 0 && (
         <>
