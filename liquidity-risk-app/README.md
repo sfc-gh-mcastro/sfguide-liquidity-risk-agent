@@ -69,6 +69,25 @@ Returns `answer`, `sql` (the generated SQL) and `suggestions`.
   ```
 - **Agent pane errors:** use Snowflake Intelligence in Snowsight as the fallback; the agent is registered there.
 
+## Share the agent with a reader account
+
+A reader account shows the consumer side of agent sharing without a second Snowflake account. The provider creates and owns it, and pays for its compute. It receives direct shares only; it cannot install Marketplace listings.
+
+1. **Provider:** run Sections 1 and 2 of `../scripts/share_agent.sql`. They create `LCR_AGENT_SHARE` with the agent, the semantic view and the tables it reads, then a reader account added to the share. Choose your own admin password; never commit it.
+2. **Wait up to 5 minutes** for the reader account to provision. Logins before then return 404.
+3. **Reader:** sign in to the reader account URL from the `CREATE MANAGED ACCOUNT` output and run Section 3. Keep the database name `LIQUIDITY_RISK_DB`: the agent spec references `LIQUIDITY_RISK_DB.PUBLIC.LIQUIDITY_SV` by full name. Create an XSMALL warehouse with a resource monitor, because the agent's own warehouse is not shared.
+4. **Demo:** in the reader account, open **AI & ML » Agents** (Source = Shared) and ask "What is the current LCR on day 1?". The answer matches the provider's, with no data copied.
+
+To connect with the Snowflake CLI, pass the reader host explicitly, otherwise `snow` may reuse the host from your default connection:
+```bash
+SNOWFLAKE_PASSWORD="$READER_PASSWORD" snow sql -x \
+  --account <org>-<reader_account_name> \
+  --host <org>-<reader-account-name-with-hyphens>.snowflakecomputing.com \
+  --user LCR_READER_ADMIN --authenticator snowflake -q "SHOW AGENTS IN SCHEMA LIQUIDITY_RISK_DB.PUBLIC"
+```
+
+The app itself runs on the provider account; the reader account is for showing the consumer experience.
+
 ## Deploy to Snowflake (SAR)
 
 ```bash
@@ -86,5 +105,7 @@ DROP WAREHOUSE IF EXISTS LIQUIDITY_RISK_WH;
 DROP WAREHOUSE IF EXISTS LIQUIDITY_RISK_AGENT_WH;
 DROP ROLE IF EXISTS LIQUIDITY_RISK_ROLE;
 ```
+
+Reader account and share: see Section 4 of `../scripts/share_agent.sql`.
 
 After teardown, check that the `LIQUIDITY_RISK_DASHBOARD_REPO` artifact repository is gone too.
